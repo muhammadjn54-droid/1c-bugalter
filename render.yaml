@@ -1,8 +1,9 @@
 services:
   - type: web
     name: accounting-system
-    runtime: docker
-    dockerfilePath: Dockerfile
+    runtime: node
+    buildCommand: npm install && cd server && npm install && npm run build && cd ../client && npm install && npm run build
+    startCommand: cd server && node dist/index.js
     envVars:
       - key: NODE_ENV
         value: production

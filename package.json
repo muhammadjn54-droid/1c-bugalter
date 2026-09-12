@@ -2,7 +2,7 @@
   "name": "accounting-inventory-system",
   "version": "1.0.0",
   "description": "Professional accounting and inventory management system",
-  "main": "dist/server.js",
+  "main": "server/dist/index.js",
   "scripts": {
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "server:dev": "cd server && npm run dev",
@@ -11,7 +11,8 @@
     "client:build": "cd client && npm run build",
     "server:start": "cd server && npm start",
     "build": "npm run server:build && npm run client:build",
-    "start": "npm run server:start"
+    "start": "cd server && node dist/index.js",
+    "migrate": "cd server && node dist/database/migrations.js"
   },
   "keywords": ["accounting", "inventory", "management"],
   "author": "",
