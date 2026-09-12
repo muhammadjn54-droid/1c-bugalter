@@ -3,8 +3,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+if (!process.env.DATABASE_URL) {
+  console.error('FATAL: DATABASE_URL is not set! The server cannot work without a database.');
+  console.error('Please set DATABASE_URL in your environment variables.');
+}
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 pool.on('error', (err) => {

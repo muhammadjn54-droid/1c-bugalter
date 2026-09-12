@@ -8,11 +8,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: accounting-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        sync: false
+        value: "*"
       - key: EMAIL_HOST
         value: smtp.gmail.com
       - key: EMAIL_PORT
@@ -23,3 +25,8 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+
+databases:
+  - name: accounting-db
+    plan: free
+    databaseName: accounting_db

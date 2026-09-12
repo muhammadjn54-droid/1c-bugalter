@@ -92,12 +92,20 @@ if (process.env.NODE_ENV === 'production') {
 
 const startServer = async () => {
   try {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.DATABASE_URL) {
+      console.log('DATABASE_URL found, connecting to database...');
+      const { pool } = await import('./config/database');
+      await pool.query('SELECT 1');
+      console.log('Database connection successful!');
+
       console.log('Running database migrations...');
       await runMigrations();
+    } else {
+      console.error('WARNING: DATABASE_URL is not set. Database operations will fail.');
+      console.error('Please set DATABASE_URL in your Render environment variables.');
     }
   } catch (error) {
-    console.error('Migration error:', error);
+    console.error('Database/Migration error:', error);
   }
 
   app.listen(port, () => {
