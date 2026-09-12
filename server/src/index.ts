@@ -4,6 +4,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import { runMigrations } from './database/migrations';
 import authRoutes from './routes/auth';
 import productsRoutes from './routes/products';
 import categoriesRoutes from './routes/categories';
@@ -55,7 +56,7 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ['./src/routes/*.ts'],
+  apis: [process.env.NODE_ENV === 'production' ? './dist/routes/*.js' : './src/routes/*.ts'],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -89,9 +90,22 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-  console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
-});
+const startServer = async () => {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Running database migrations...');
+      await runMigrations();
+    }
+  } catch (error) {
+    console.error('Migration error:', error);
+  }
+
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+    console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
+  });
+};
+
+startServer();
 
 export default app;

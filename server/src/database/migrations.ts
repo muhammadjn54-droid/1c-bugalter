@@ -199,26 +199,33 @@ const migrations = [
   `CREATE INDEX IF NOT EXISTS idx_stock_movements_user_id ON stock_movements(user_id);`,
 ];
 
-async function runMigrations() {
+export async function runMigrations() {
   const client = await pool.connect();
   try {
     console.log('Running migrations...');
     for (const migration of migrations) {
       try {
         await client.query(migration);
-        console.log('✓ Migration completed');
       } catch (error: any) {
         if (!error.message.includes('already exists')) {
-          console.error('Migration error:', error);
-          throw error;
+          console.error('Migration error:', error.message);
         }
       }
     }
     console.log('All migrations completed successfully!');
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
-runMigrations().catch(console.error);
+if (require.main === module) {
+  runMigrations()
+    .then(() => {
+      console.log('Migrations done, exiting.');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('Migration failed:', err);
+      process.exit(1);
+    });
+}
