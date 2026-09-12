@@ -304,4 +304,56 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /sales/{id}:
+ *   delete:
+ *     summary: Delete a sale
+ *     tags: [Sales]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Sale deleted
+ *       404:
+ *         description: Sale not found
+ */
+router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const saleResult = await query(
+      'SELECT * FROM sales WHERE id = $1 AND user_id = $2',
+      [id, req.userId]
+    );
+
+    if (saleResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sale not found',
+      });
+    }
+
+    await query('DELETE FROM sale_items WHERE sale_id = $1', [id]);
+    await query('DELETE FROM sales WHERE id = $1 AND user_id = $2', [id, req.userId]);
+
+    res.json({
+      success: true,
+      message: 'Sale deleted successfully',
+    });
+  } catch (error) {
+    console.error('Delete sale error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete sale',
+    });
+  }
+});
+
 export default router;

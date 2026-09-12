@@ -206,6 +206,76 @@ router.post('/login', async (req: Request, res: Response) => {
 /**
  * @swagger
  * /auth/me:
+ *   put:
+ *     summary: Update current user profile
+ *     tags: [Authentication]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ */
+router.put('/me', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { name, email } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name and email are required',
+      });
+    }
+
+    const existingUser = await query(
+      'SELECT id FROM users WHERE email = $1 AND id != $2',
+      [email, req.userId]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email is already in use',
+      });
+    }
+
+    await query(
+      'UPDATE users SET name = $1, email = $2 WHERE id = $3',
+      [name, email, req.userId]
+    );
+
+    const result = await query(
+      'SELECT id, email, name, created_at FROM users WHERE id = $1',
+      [req.userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update profile',
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/me:
  *   get:
  *     summary: Get current user
  *     tags: [Authentication]

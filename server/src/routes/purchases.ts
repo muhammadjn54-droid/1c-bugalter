@@ -304,4 +304,56 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /purchases/{id}:
+ *   delete:
+ *     summary: Delete a purchase
+ *     tags: [Purchases]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Purchase deleted
+ *       404:
+ *         description: Purchase not found
+ */
+router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const purchaseResult = await query(
+      'SELECT * FROM purchases WHERE id = $1 AND user_id = $2',
+      [id, req.userId]
+    );
+
+    if (purchaseResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Purchase not found',
+      });
+    }
+
+    await query('DELETE FROM purchase_items WHERE purchase_id = $1', [id]);
+    await query('DELETE FROM purchases WHERE id = $1 AND user_id = $2', [id, req.userId]);
+
+    res.json({
+      success: true,
+      message: 'Purchase deleted successfully',
+    });
+  } catch (error) {
+    console.error('Delete purchase error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete purchase',
+    });
+  }
+});
+
 export default router;
